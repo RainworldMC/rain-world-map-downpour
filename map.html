@@ -13,6 +13,7 @@
     <meta property="og:description"
         content="An online interactive map that includes every region and every slugcat in Rain World: Downpour. - github.com/rain-world-map" />
     <link rel="stylesheet" href="./rw.css" />
+    <link rel="stylesheet" href="./room-effects.css" />
     <link rel="stylesheet" href="./leaflet/leaflet.css" />
 
     <script src="./global.js"></script>
@@ -468,6 +469,7 @@
                     weight: 0
                 });
             focusedRoom = e;
+            window.roomEffects?.select(e, region, { slugcat: difficulty });
             console.log(focusedRoom.feature.properties.name + " focused")
             map.fitBounds(e.getBounds());
             updateHilight(); // might not move
@@ -495,6 +497,7 @@
                     weight: 0
                 });
             focusedRoom = null;
+            window.roomEffects?.select(null);
 
             room = null;
             pushState(true); // no navigation so no zoom change
@@ -546,6 +549,7 @@
         var connectionsLayer;
         var geometryLayer;
         var densLayer;
+        var regionLoadVersion = 0;
         var loadedDifficulty = null;
         var loadedRegion = null;
         var loadedModded = {};
@@ -570,6 +574,8 @@
                 }
                 return;
             }
+            const loadVersion = ++regionLoadVersion;
+            window.roomEffects?.select(null);
             region = pregion; // chaos
             modded = pmodded;
             console.log("Loading: region {" + region + "} on slugcat {" + pdifficulty + "}, modded {" + modded + "}");
@@ -585,13 +591,20 @@
             };
             var region_url = region.toLowerCase();
             var roompath = `${slugcat_url[pdifficulty]}/${region_url}`;
-            getJsonObject(`${roompath}/region.json`, function (json) {
+            getJsonObject(`${roompath}/region.json`, async function (json) {
                 var roomjson = json;
+                var geometrySlugcat = pdifficulty;
                 if ('copyingrooms' in json) {
                     getJsonObject(`${slugcat_url[json['copyingrooms']]}/${region_url}/region.json`, function (copyjson) {
                         roomjson = copyjson;
+                        geometrySlugcat = json['copyingrooms'];
                         roompath = `${slugcat_url[json['copyingrooms']]}/${region_url}`;
                     }, false);
+                }
+
+                await window.roomEffects?.prepareRooms(roomjson, geometrySlugcat, pregion);
+                if (loadVersion !== regionLoadVersion || difficulty !== pdifficulty || region !== pregion) {
+                    return;
                 }
 
                 // Background color
@@ -777,6 +790,8 @@
         }
 
     </script>
+    <script charset="utf-8" src="./room-effects-character.js"></script>
+    <script charset="utf-8" src="./room-effects.js"></script>
 </body>
 
 </html>

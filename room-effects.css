@@ -1,0 +1,304 @@
+.effects-inspector,
+.effect-card,
+.effect-point-label {
+    --effects-text: #ccc;
+    --effects-muted: #a9a4b2;
+    --effects-border: #4b4653;
+    --effects-surface: #0c0c0c;
+    --effects-sound: #7bdbe8;
+    --effects-trigger: #efb96b;
+    --effects-radius: 8px;
+}
+
+.side-panel.effects-inspector {
+    left: 302px;
+    width: 310px;
+    max-width: calc(100vw - 48px);
+    box-sizing: border-box;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+}
+
+.effects-inspector[hidden] {
+    display: none;
+}
+
+.effects-header,
+.effect-card summary.effects-drag-handle {
+    border-bottom: 1px solid var(--effects-border);
+}
+
+.effects-header {
+    flex-shrink: 0;
+    padding: 4px 8px 12px;
+}
+
+.effects-heading {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.effects-inspector h2 {
+    margin: 8px 0 0;
+    color: var(--effects-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+}
+
+.effects-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 0 8px 8px;
+}
+
+.effects-inspector p {
+    margin: 12px 0;
+    line-height: 1.5;
+}
+
+.effects-note,
+.effects-totals,
+.effects-type-count,
+.effects-controls input[type="search"]::placeholder {
+    color: var(--effects-muted);
+    font-weight: 400;
+}
+
+.effects-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.effects-controls input[type="search"],
+.effects-type-filters,
+.effect-card {
+    border-radius: var(--effects-radius);
+}
+
+.effects-controls input[type="search"] {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    border: 2px solid var(--effects-border);
+    padding: 8px;
+    background: transparent;
+    color: var(--effects-text);
+    font: inherit;
+    color-scheme: dark;
+}
+
+.effects-controls input[type="search"]:hover {
+    border-color: var(--effects-muted);
+}
+
+.effects-controls button.rw-ui {
+    flex: 1;
+    width: auto;
+    height: auto;
+    min-height: 30px;
+    padding: 5px 10px;
+    background: transparent;
+    font: inherit;
+}
+
+.effects-type-filters {
+    min-width: 0;
+    margin: 16px 0 12px;
+    padding: 8px;
+    border: 1px solid var(--effects-border);
+}
+
+.effects-type-filters legend {
+    padding: 0 6px;
+    color: var(--effects-text);
+}
+
+.effects-type-list {
+    max-height: 190px;
+    overflow-y: auto;
+    margin: 8px -4px 0;
+    padding: 4px 8px;
+}
+
+.effects-type-option {
+    display: flex;
+    position: relative;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    cursor: pointer;
+}
+
+.effects-type-option input.rw-ui {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    background: transparent;
+}
+
+.effects-type-option input.rw-ui::before {
+    font-size: 12px;
+    line-height: 14px;
+}
+
+.effects-type-option input.rw-ui + span {
+    position: static;
+    width: auto;
+    text-align: left;
+    color: #8c8795;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.effects-type-count {
+    margin-left: auto;
+}
+
+.effects-visible-count {
+    color: var(--effects-text);
+}
+
+.effects-inspector details {
+    border-top: 1px solid var(--effects-border);
+    padding: 8px 0;
+}
+
+.effects-inspector summary,
+.effect-card summary {
+    cursor: pointer;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.effects-inspector summary:hover,
+.effect-card summary:hover {
+    color: white;
+}
+
+.effects-inspector :focus-visible,
+.effect-card summary:focus-visible {
+    outline: 2px solid var(--effects-text);
+    outline-offset: 3px;
+}
+
+.effects-body,
+.effects-type-list,
+.effect-card {
+    scrollbar-width: thin;
+    scrollbar-color: var(--effects-border) var(--effects-surface);
+}
+
+.effect-card {
+    transform: scale(0.75);
+    transform-origin: top left;
+    width: 230px;
+    max-height: 220px;
+    overflow: auto;
+    border: 2px solid var(--effects-muted);
+    padding: 8px;
+    box-sizing: border-box;
+    color: var(--effects-text);
+    background: var(--effects-surface);
+    font: 12px/1.5 'Segoe UI', sans-serif;
+}
+
+.effect-card summary {
+    position: sticky;
+    top: -8px;
+    background: var(--effects-surface);
+    padding: 4px 0 8px;
+}
+
+.effects-drag-handle {
+    cursor: grab !important;
+    touch-action: none;
+    user-select: none;
+}
+
+.effects-header::after,
+.effect-card summary.effects-drag-handle::before {
+    content: '\22ee\22ee';
+    color: var(--effects-muted);
+}
+
+.effects-header::after {
+    position: absolute;
+    right: 16px;
+    top: 12px;
+}
+
+.effect-card summary.effects-drag-handle::before {
+    margin-right: 6px;
+}
+
+.effects-drag-handle.effects-dragging {
+    cursor: grabbing !important;
+}
+
+.effect-inactive {
+    border-style: dashed;
+    color: var(--effects-muted);
+}
+
+.effect-card-sound {
+    border-color: var(--effects-sound);
+}
+
+.effect-card-trigger {
+    border-color: var(--effects-trigger);
+}
+
+.effect-record-sound summary {
+    color: var(--effects-sound);
+}
+
+.effect-record-trigger summary {
+    color: var(--effects-trigger);
+}
+
+.effect-setting {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.effect-setting > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.effect-setting > span:first-child {
+    color: var(--effects-muted);
+}
+
+.effect-point-label {
+    color: var(--effects-text);
+    font: 600 12px 'Segoe UI', sans-serif;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px #000, 1px 0 3px #000;
+}
+
+@media (max-width: 900px) {
+    .side-panel.effects-inspector {
+        left: 24px;
+        top: auto;
+        bottom: 24px;
+        max-height: 38vh;
+    }
+}
+
+@media (max-width: 700px) {
+    .side-panel.effects-inspector {
+        left: 8px;
+        bottom: 20px;
+        max-width: calc(100vw - 16px);
+        max-height: 32vh;
+    }
+}
