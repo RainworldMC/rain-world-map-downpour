@@ -91,20 +91,36 @@ button.rw-ui.effects-hide-toggle[hidden] {
     transform: rotate(90deg);
 }
 
-.effect-card[open] > :not(summary) {
-    animation: effects-reveal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
 .effect-card::details-content {
-    block-size: 0;
-    overflow: clip;
-    content-visibility: hidden;
-    transition: block-size 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 0.3s allow-discrete;
-}
-
-.effect-card[open]::details-content {
     block-size: auto;
     content-visibility: visible;
+    overflow: visible;
+    transition: none;
+}
+
+.effect-card-collapse {
+    display: grid;
+    grid-template-rows: 1fr;
+    min-height: 0;
+    transition: grid-template-rows 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.effect-card-scroll {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.effect-card:not([open]) .effect-card-collapse {
+    grid-template-rows: 0fr;
+}
+
+.effect-card summary {
+    transition: padding-bottom 0.3s, border-color 0.3s;
+}
+
+.effect-card:not([open]) > summary {
+    padding-bottom: 4px;
+    border-bottom-color: transparent;
 }
 
 .effect-card summary {
