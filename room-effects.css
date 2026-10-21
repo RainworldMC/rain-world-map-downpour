@@ -78,7 +78,7 @@ button.rw-ui.effects-hide-toggle[hidden] {
     content: '\25B8';
     position: absolute;
     left: 0;
-    top: 2px;
+    top: 0px;
     width: 1em;
     text-align: center;
     color: var(--effects-muted);
