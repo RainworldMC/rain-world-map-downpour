@@ -6,12 +6,14 @@
     <title>Rain World Map</title>
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
 
-    <meta property="og:image" content="https://rain-world-map.github.io/embed.jpg" />
+    <meta property="og:image" content="https://avatars.githubusercontent.com/u/259985150?s=400&v=4" />
+    <meta property="og:site_name" content="GitHub" />
     <meta property="og:type" content="object" />
-    <meta property="og:title" content="Rain World Map" />
-    <meta property="og:url" content="https://rain-world-map.github.io" />
+    <meta property="og:title" content="Rain World Interactive Map - Downpour" />
+    <meta property="og:url" content="https://rainworldmc.github.io/rain-world-map-downpour/index.html" />
     <meta property="og:description"
-        content="An online interactive map that includes every region and every slugcat in Rain World: Downpour. - github.com/rain-world-map" />
+          content="An online interactive map that includes every region and every slugcat in Rain World: Downpour. - RainworldMC/rain-world-map-downpour - fork of github.com/rain-world-map" />
+    <link rel="stylesheet" href="./rw.css" />
     <link rel="stylesheet" href="./rw.css" />
     <link rel="stylesheet" href="./room-effects.css" />
     <link rel="stylesheet" href="./leaflet/leaflet.css" />
@@ -218,6 +220,10 @@
     <div class="side-panel left-panel rw-text">
         <div style="padding-left: 8px; padding-bottom: 8px;">
             <span>Regions</span>
+        </div>
+        <br>
+        <div style="padding-left: 8px; padding-bottom: 8px;">
+            <a href="https://rainworldmc.github.io/Rain-World-Interactive-Map/">Basegame + Modded</a>
         </div>
 
         <form name="regionselect" id="region-select" class="scroll-ish"></form>
@@ -469,9 +475,9 @@
                     weight: 0
                 });
             focusedRoom = e;
-            window.roomEffects?.select(e, region, { slugcat: difficulty });
             console.log(focusedRoom.feature.properties.name + " focused")
             map.fitBounds(e.getBounds());
+            if (window.roomEffects) window.roomEffects.select(e, region);
             updateHilight(); // might not move
             focusedRoom.setStyle(
                 {
@@ -510,7 +516,7 @@
             crs: L.CRS.Simple,
             zoomControl: false,
         });
-        map.attributionControl.setPrefix('Powered by <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &amp <a href="https://github.com/henpemaz" title="Gamedev &amp associated arts enthusiast">Henpemaz</a>')
+        map.attributionControl.setPrefix('Powered by <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>, <a href="https://github.com/RainworldMC" title="Project faithfully recreating Rainworld in Minecraft">RainworldMC</a> &amp <a href="https://github.com/henpemaz" title="Gamedev &amp associated arts enthusiast">Henpemaz</a>')
         map.setView([0, 0], -5);
 
         // Events

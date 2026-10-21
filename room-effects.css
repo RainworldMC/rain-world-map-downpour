@@ -1,38 +1,192 @@
-.effects-inspector,
+﻿.effects-inspector,
 .effect-card,
 .effect-point-label {
     --effects-text: #ccc;
     --effects-muted: #a9a4b2;
     --effects-border: #4b4653;
-    --effects-surface: #0c0c0c;
+    --effects-surface: #000;
+    --effects-outline: #fff;
     --effects-sound: #7bdbe8;
     --effects-trigger: #efb96b;
     --effects-radius: 8px;
+    interpolate-size: allow-keywords;
+}
+
+.side-panel {
+    box-sizing: border-box;
+    background: #000;
+    border: 2px solid #fff;
+    border-radius: 8px;
 }
 
 .side-panel.effects-inspector {
-    left: 302px;
+    position: absolute;
+    top: 24px;
+    left: 232px;
     width: 310px;
-    max-width: calc(100vw - 48px);
+    min-width: 310px;
+    max-height: calc(100vh - 54px);
     box-sizing: border-box;
     padding: 8px;
     font-size: 12px;
     font-weight: 600;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
 }
 
-.effects-inspector[hidden] {
+.side-panel.effects-inspector[hidden] {
     display: none;
 }
 
-.effects-header,
-.effect-card summary.effects-drag-handle {
-    border-bottom: 1px solid var(--effects-border);
+.side-panel.effects-inspector.effects-docked {
+    top: auto;
+    bottom: 0;
+    border-bottom-width: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    animation: effects-dock 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+button.rw-ui.effects-hide-toggle {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 36px;
+    z-index: 2000;
+    background: #000;
+    font: inherit;
+}
+
+button.rw-ui.effects-hide-toggle[hidden] {
+    display: none;
+}
+
+.effects-titlebar {
+    position: relative;
+    display: block;
+    list-style: none;
+    padding-left: 18px;
+}
+
+.effects-titlebar::before,
+.effects-inspector summary::before,
+.effect-card summary::before {
+    content: '\25B8';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 1em;
+    text-align: center;
+    color: var(--effects-muted);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s;
+}
+
+.effects-titlebar[aria-expanded="true"]::before,
+.effects-inspector details[open] > summary::before,
+.effect-card[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.effect-card[open] > :not(summary) {
+    animation: effects-reveal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.effect-card::details-content {
+    block-size: 0;
+    overflow: clip;
+    content-visibility: hidden;
+    transition: block-size 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 0.3s allow-discrete;
+}
+
+.effect-card[open]::details-content {
+    block-size: auto;
+    content-visibility: visible;
+}
+
+.effect-card summary {
+    position: sticky;
+    top: -8px;
+    z-index: 1;
+    padding: 4px 24px 8px 18px;
+    background: var(--effects-surface);
+    color: var(--effect-object-color, var(--effects-text));
+}
+
+@supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .effect-card {
+        interpolate-size: allow-keywords;
+    }
+    .effect-card::details-content {
+        block-size: 0;
+        overflow: hidden;
+        transition: block-size 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .effect-card[open]::details-content {
+        block-size: auto;
+    }
+    .effect-card.effect-opening > :not(summary) {
+        animation: none;
+    }
+}
+
+.effects-titlebar:hover::before,
+.effects-inspector summary:hover::before,
+.effect-card summary:hover::before {
+    color: white;
+}
+
+.effects-inspector summary::-webkit-details-marker,
+.effect-card summary::-webkit-details-marker {
+    display: none;
 }
 
 .effects-header {
     flex-shrink: 0;
-    padding: 4px 8px 12px;
+    padding: 4px 24px 12px 22px;
+    border-bottom: 1px solid var(--effects-border);
+    cursor: grab;
+    transition: padding-bottom 0.3s, border-color 0.3s;
+}
+
+.effects-header::before {
+    left: 6px;
+    top: 8px;
+}
+
+.effects-header::after {
+    content: '\22ee\22ee';
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    color: var(--effects-muted);
+}
+
+.effects-collapsed .effects-header {
+    border-bottom-color: transparent;
+    padding-bottom: 4px;
+}
+
+.effects-collapse {
+    display: grid;
+    grid-template-rows: 1fr;
+    flex: 1 1 auto;
+    min-height: 0;
+    transition: grid-template-rows 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.effects-collapse > .effects-scroll {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.effects-collapsed .effects-collapse {
+    grid-template-rows: 0fr;
 }
 
 .effects-heading {
@@ -49,9 +203,64 @@
 }
 
 .effects-body {
+    flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
-    padding: 0 8px 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 8px;
+}
+
+.effects-body::after {
+    content: '';
+    display: block;
+    height: 8px;
+}
+
+.effects-color-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    cursor: default;
+}
+
+.effects-header .effects-color-option label,
+.effects-header .effects-color-option input {
+    cursor: pointer;
+}
+
+.effects-color-option input[type='checkbox'].rw-ui {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+}
+
+.effects-color-option input[type='checkbox'].rw-ui-ckb::before {
+    font-size: 1rem;
+    line-height: 20px;
+}
+
+.effects-color-option input[type='checkbox'].rw-ui-ckb + label {
+    position: static;
+    left: auto;
+    top: auto;
+    color: var(--effects-muted);
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.effects-color-option input[type='checkbox'].rw-ui-ckb:hover + label,
+.effects-color-option input[type='checkbox'].rw-ui-ckb:checked + label {
+    color: var(--effects-text);
+}
+
+.effects-room-details > .effect-record:first-child {
+    border-top: none;
+}
+
+.effects-room-settings[open] > :not(summary) {
+    animation: effects-reveal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .effects-inspector p {
@@ -59,10 +268,7 @@
     line-height: 1.5;
 }
 
-.effects-note,
-.effects-totals,
-.effects-type-count,
-.effects-controls input[type="search"]::placeholder {
+.effects-note {
     color: var(--effects-muted);
     font-weight: 400;
 }
@@ -70,97 +276,145 @@
 .effects-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 6px 0;
-}
-
-.effects-controls input[type="search"],
-.effects-type-filters,
-.effect-card {
-    border-radius: var(--effects-radius);
-}
-
-.effects-controls input[type="search"] {
+    gap: 4px;
     width: 100%;
-    min-width: 0;
+    max-width: none;
+    padding: 6px 0;
     box-sizing: border-box;
-    border: 2px solid var(--effects-border);
-    padding: 8px;
-    background: transparent;
-    color: var(--effects-text);
-    font: inherit;
-    color-scheme: dark;
-}
-
-.effects-controls input[type="search"]:hover {
-    border-color: var(--effects-muted);
 }
 
 .effects-controls button.rw-ui {
-    flex: 1;
-    width: auto;
-    height: auto;
-    min-height: 30px;
-    padding: 5px 10px;
+    flex: 1 1 0;
+    min-width: 0;
+    width: 100%;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 6px;
+    box-sizing: border-box;
     background: transparent;
     font: inherit;
+    font-size: 11px;
+    line-height: 1.1;
+    white-space: nowrap;
 }
 
-.effects-type-filters {
-    min-width: 0;
-    margin: 16px 0 12px;
-    padding: 8px;
-    border: 1px solid var(--effects-border);
+.effects-type-panel {
+    --effects-text: #ccc;
+    --effects-muted: #a9a4b2;
+    --effects-border: #4b4653;
+    --effects-surface: #000;
+    display: block;
+    width: 100%;
+    min-width: 200px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    align-self: flex-start;
+    overflow: visible;
+    margin: 12px 0 0;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--effects-border);
+    background: transparent;
+    box-sizing: border-box;
 }
 
-.effects-type-filters legend {
-    padding: 0 6px;
-    color: var(--effects-text);
+.effects-type-panel[hidden] {
+    display: none;
+}
+
+.effects-type-list > button.rw-ui.effects-type-toggle:last-child {
+    margin-bottom: 0;
+}
+
+.effects-type-panel.effects-type-panel-empty {
+    border-top: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    height: auto;
+    min-height: 0;
+}
+
+.effects-type-panel.effects-type-panel-empty > .effects-note {
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    line-height: 1.2;
+    display: block;
 }
 
 .effects-type-list {
-    max-height: 190px;
-    overflow-y: auto;
-    margin: 8px -4px 0;
-    padding: 4px 8px;
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.effects-type-option {
-    display: flex;
+button.rw-ui.effects-type-toggle {
     position: relative;
+    display: flex;
     align-items: center;
-    gap: 10px;
-    min-height: 32px;
-    cursor: pointer;
-}
-
-.effects-type-option input.rw-ui {
-    flex: 0 0 18px;
-    width: 18px;
-    height: 18px;
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    height: auto;
+    margin: 11px 0;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    font: inherit;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     background: transparent;
 }
 
-.effects-type-option input.rw-ui::before {
-    font-size: 12px;
-    line-height: 14px;
+.effects-type-toggle[aria-pressed="false"]:not(:hover),
+.effects-controls button.rw-ui[aria-pressed="false"]:not(:hover) {
+    color: #4B4653;
 }
 
-.effects-type-option input.rw-ui + span {
-    position: static;
-    width: auto;
-    text-align: left;
-    color: #8c8795;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
+.effects-type-toggle[aria-pressed="false"]:not(:hover)::before,
+.effects-controls button.rw-ui[aria-pressed="false"]:not(:hover)::before {
+    border-color: #4B4653;
 }
 
-.effects-type-count {
-    margin-left: auto;
+.effects-type-toggle[aria-pressed="true"],
+.effects-controls button.rw-ui[aria-pressed="true"] {
+    color: #A9A4B2;
 }
 
-.effects-visible-count {
-    color: var(--effects-text);
+.effects-type-toggle[aria-pressed="true"]::after,
+.effects-controls button.rw-ui[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: -6px;
+    padding: 4px;
+    border-radius: 8px;
+    border: 2px solid #A9A4B2;
+    transition: padding 0.3s, border-color 0.3s, margin 0.3s;
+    pointer-events: none;
+}
+
+.effects-type-toggle[aria-pressed="true"]:hover::after,
+.effects-controls button.rw-ui[aria-pressed="true"]:hover::after {
+    margin: -10px;
+    padding: 8px;
+    border-color: white;
+}
+
+.effects-type-toggle[aria-pressed="true"]:active::after,
+.effects-controls button.rw-ui[aria-pressed="true"]:active::after {
+    margin: -6px;
+    padding: 4px;
+    border-color: white;
 }
 
 .effects-inspector details {
@@ -170,6 +424,10 @@
 
 .effects-inspector summary,
 .effect-card summary {
+    position: relative;
+    display: block;
+    list-style: none;
+    padding-left: 18px;
     cursor: pointer;
     font-weight: 600;
     line-height: 1.5;
@@ -187,31 +445,49 @@
 }
 
 .effects-body,
-.effects-type-list,
 .effect-card {
     scrollbar-width: thin;
     scrollbar-color: var(--effects-border) var(--effects-surface);
 }
 
 .effect-card {
-    transform: scale(0.75);
-    transform-origin: top left;
     width: 230px;
     max-height: 220px;
     overflow: auto;
-    border: 2px solid var(--effects-muted);
+    border: 2px solid var(--effects-outline);
+    border-radius: var(--effects-radius);
     padding: 8px;
     box-sizing: border-box;
     color: var(--effects-text);
     background: var(--effects-surface);
     font: 12px/1.5 'Segoe UI', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.3s;
+}
+
+.effect-card:hover {
+    box-shadow: 0 0 0 1px #fff, 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.effect-card-anchor,
+.effect-connector {
+    transition: opacity 0.25s;
+}
+
+.effects-cards-leaving .effect-card-anchor,
+.effects-cards-leaving .effect-connector {
+    opacity: 0;
 }
 
 .effect-card summary {
     position: sticky;
     top: -8px;
+    padding: 4px 24px 8px 18px;
     background: var(--effects-surface);
-    padding: 4px 0 8px;
+    color: var(--effect-object-color, var(--effects-text));
+}
+
+.effect-card summary::before {
+    top: 8px;
 }
 
 .effects-drag-handle {
@@ -220,20 +496,16 @@
     user-select: none;
 }
 
-.effects-header::after,
-.effect-card summary.effects-drag-handle::before {
+.effect-card summary.effects-drag-handle {
+    border-bottom: 1px solid var(--effects-border);
+}
+
+.effect-card summary.effects-drag-handle::after {
     content: '\22ee\22ee';
-    color: var(--effects-muted);
-}
-
-.effects-header::after {
     position: absolute;
-    right: 16px;
-    top: 12px;
-}
-
-.effect-card summary.effects-drag-handle::before {
-    margin-right: 6px;
+    right: 0;
+    top: 4px;
+    color: var(--effects-muted);
 }
 
 .effects-drag-handle.effects-dragging {
@@ -246,11 +518,11 @@
 }
 
 .effect-card-sound {
-    border-color: var(--effects-sound);
+    --effect-object-color: var(--effects-sound);
 }
 
 .effect-card-trigger {
-    border-color: var(--effects-trigger);
+    --effect-object-color: var(--effects-trigger);
 }
 
 .effect-record-sound summary {
@@ -298,7 +570,38 @@
     .side-panel.effects-inspector {
         left: 8px;
         bottom: 20px;
+        width: calc(100vw - 16px);
+        min-width: 0;
         max-width: calc(100vw - 16px);
         max-height: 32vh;
+    }
+}
+
+@keyframes effects-dock {
+    from {
+        transform: translateY(14px);
+    }
+}
+
+@keyframes effects-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .side-panel,
+    .effects-collapse,
+    .effect-card,
+    .effect-card > *,
+    .effect-card::details-content,
+    .effect-connector,
+    .effect-card-anchor,
+    .effects-room-settings > *,
+    .effects-type-toggle,
+    .effects-controls button.rw-ui {
+        animation: none !important;
+        transition: none !important;
     }
 }
