@@ -78,7 +78,7 @@ button.rw-ui.effects-hide-toggle[hidden] {
     content: '\25B8';
     position: absolute;
     left: 0;
-    top: 4px;
+    top: 2px;
     width: 1em;
     text-align: center;
     color: var(--effects-muted);
@@ -116,23 +116,6 @@ button.rw-ui.effects-hide-toggle[hidden] {
     color: var(--effect-object-color, var(--effects-text));
 }
 
-@supports (interpolate-size: allow-keywords) and selector(::details-content) {
-    .effect-card {
-        interpolate-size: allow-keywords;
-    }
-    .effect-card::details-content {
-        block-size: 0;
-        overflow: hidden;
-        transition: block-size 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-    .effect-card[open]::details-content {
-        block-size: auto;
-    }
-    .effect-card.effect-opening > :not(summary) {
-        animation: none;
-    }
-}
-
 .effects-titlebar:hover::before,
 .effects-inspector summary:hover::before,
 .effect-card summary:hover::before {
@@ -154,7 +137,7 @@ button.rw-ui.effects-hide-toggle[hidden] {
 
 .effects-header::before {
     left: 6px;
-    top: 8px;
+    top: 6px;
 }
 
 .effects-header::after {
@@ -487,7 +470,7 @@ button.rw-ui.effects-type-toggle {
 }
 
 .effect-card summary::before {
-    top: 8px;
+    top: 4px;
 }
 
 .effects-drag-handle {
