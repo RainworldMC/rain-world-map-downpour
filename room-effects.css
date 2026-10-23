@@ -604,3 +604,121 @@ button.rw-ui.effects-type-toggle {
         transition: none !important;
     }
 }
+
+.effects-collapsible-panel {
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 0;
+    filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
+    drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff);
+}
+
+/* Compensate for the removed 2px border so the black area sits where it used to */
+.left-panel.effects-collapsible-panel  { left: 26px; }
+.right-panel.effects-collapsible-panel { right: 26px; }
+
+button.effects-collapse-tab {
+    position: absolute;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    background: #0c0c0c;
+    border: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 100;
+    line-height: 0;
+    font: inherit;
+    color: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    will-change: transform;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+
+button.effects-collapse-tab:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 1px;
+}
+
+button.effects-collapse-tab > span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+.effects-panel-side-left > button.effects-collapse-tab {
+    left: calc(100% - 9px);
+    right: auto;
+    border-radius: 0 6px 6px 0;
+}
+
+.effects-panel-side-right > button.effects-collapse-tab {
+    right: calc(100% - 9px);
+    left: auto;
+    border-radius: 6px 0 0 6px;
+}
+
+.effects-panel-side-left > button.effects-collapse-tab:hover {
+    transform: translateX(4px);
+}
+
+.effects-panel-side-right > button.effects-collapse-tab:hover {
+    transform: translateX(-4px);
+}
+
+.effects-panel-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s ease, visibility 0s 0s;
+}
+
+.effects-panel-collapsed > .effects-panel-content {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0s 0.25s;
+}
+
+.effects-collapsed-label {
+    position: absolute;
+    top: 50%;
+    color: #ccc;
+    font-size: 13px;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    transform: translateY(-50%) rotate(180deg);
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+}
+
+.effects-panel-side-left > .effects-collapsed-label  { right: 6px; }
+.effects-panel-side-right > .effects-collapsed-label { left: 6px; }
+
+.effects-panel-collapsed > .effects-collapsed-label {
+    display: block;
+}
+
+.effects-panel-side-left.effects-panel-collapsed {
+    transform: translateX(calc(-100% + 2px));
+}
+
+.effects-panel-side-right.effects-panel-collapsed {
+    transform: translateX(calc(100% - 2px));
+}

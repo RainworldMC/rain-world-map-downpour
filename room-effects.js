@@ -2,6 +2,7 @@
     'use strict';
 
     let selectionContext = {};
+    let preparedSlugcat = null;
 
     function hasRoomOrigin(roomLayer) {
         const origin = roomLayer && roomLayer.feature.properties.room_origin;
@@ -19,18 +20,29 @@
         return value.toString(16).padStart(8, '0');
     }
 
+    function currentSlugcat(context) {
+        return (context && context.slugcat) || preparedSlugcat || null;
+    }
+
     const api = RoomEffectsCommon.createRoomEffects({
         onSelect: (context) => { selectionContext = context; },
-        getOffsetContext: () => selectionContext.slugcat,
+        getOffsetContext: () => currentSlugcat(selectionContext),
         shouldDrawSpatial: hasRoomOrigin,
         getWorldOrigin: (roomLayer) => roomLayer.feature.properties.room_origin,
         getMissingSpatialMessage: (roomLayer) =>
             hasRoomOrigin(roomLayer) ? null : 'Spatial placement is unavailable: this room has no matching terrain reference. Settings are listed below.',
+        pickVariant: (variants, context) =>
+            window.roomEffectsCharacter
+                ? window.roomEffectsCharacter.pickVariant(variants, currentSlugcat(context))
+                : variants[''],
         filterEntry: (entry, context) =>
-            window.roomEffectsCharacter ? window.roomEffectsCharacter.forCharacter(entry, context.slugcat) : entry,
+            window.roomEffectsCharacter
+                ? window.roomEffectsCharacter.forCharacter(entry, currentSlugcat(context))
+                : entry,
     });
 
     async function prepareRooms(data, slugcat, region) {
+        preparedSlugcat = slugcat || null;
         let coordinates;
         try {
             coordinates = await api.loadJSON('coordinates/' + slugcat + '/' + region, true);

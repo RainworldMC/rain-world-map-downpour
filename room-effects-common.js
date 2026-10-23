@@ -10,6 +10,7 @@
         const getWorldOrigin = config.getWorldOrigin || defaultWorldOrigin;
         const getMissingSpatialMessage = config.getMissingSpatialMessage || (() => null);
         const filterEntry = config.filterEntry || ((entry) => entry);
+        const pickVariant = config.pickVariant || defaultVariant;
 
         const cache = new Map();
         const cardOffsets = new Map();
@@ -18,10 +19,10 @@
         const visibilityKey = 'rain-world-map.hidden-effect-types';
         const colorKey = 'rain-world-map.object-colors';
         const geometryStyle = { color: '#fff', weight: 1, opacity: 0.85, fillOpacity: 0, interactive: false };
-        const radiusClasses = new Set(['LightSourceData', 'ResizableObjectData', 'InsectGroupData', 'ScavengerOutpostData', 'SnowSourceData', 'OEsphereData', 'CellDistortionData']);
+        const radiusClasses = new Set(['LightSourceData', 'ResizableObjectData', 'InsectGroupData', 'ScavengerOutpostData', 'SnowSourceData', 'OEsphereData', 'CellDistortionData', 'LocalBlizzardData', 'EnergySwirlData', 'SteamPipeData', 'FilterData', 'RippleLevelFilterData', 'PrinceFilterData', 'CollectTokenData', 'AirPocketData', 'WaterCutoffData', 'CustomRotData', 'GeyserData', 'GooDripsData', 'LobeTreeData', 'MudPitData', 'RainbowData', 'RainbowNoFadeData', 'ReliableIggyDirectionData', 'KarmaFlowerPatchData', 'WaterCurrentData']);
         const hiddenEffectKeys = new Set(['inherited', 'overwrite', 'effectindex', 'amount']);
         const hiddenSettingKeys = new Set(['mergedtimelines']);
-        const hiddenRecordKeys = new Set(['soundindex', 'inherited', 'overwrite']);
+        const hiddenRecordKeys = new Set(['soundindex', 'inherited', 'overwrite', 'isblue', 'isgreen', 'iswhite', 'isred', 'isdev', 'availabletoplayers', 'vertices', 'raw',]);
         const noKeys = new Set();
         const edgePadding = 6;
         const cardGap = 6;
@@ -234,7 +235,9 @@
         }
 
         function format(value) {
-            return typeof value === 'number' ? String(Math.round(value * 1000) / 1000) : String(value);
+            if (typeof value === 'number') return String(Math.round(value * 1000) / 1000);
+            if (value !== null && typeof value === 'object') return JSON.stringify(value);
+            return String(value);
         }
 
         function element(tag, className = '', text) {
@@ -395,6 +398,44 @@
             if (eventType && !/^none$/i.test(String(eventType))) return label(eventType);
             return label(record.trigger_type) + ' Trigger';
         }
+        function defaultVariant(variants) {
+            return variants[''];
+        }
+
+        function normalizeObject(object, index) {
+            const data = object.data;
+            if (!data || typeof data !== 'object') return object;
+            const flat = {
+                object_type: object.type,
+                object_index: object.object_index ?? index,
+                pos_x: object.posX,
+                pos_y: object.posY,
+                active: object.active !== false,
+                deactivated_by_warp_filter: Boolean(object.deactivatedByWarpFilter),
+                data_class: data.kind,
+            };
+            for (const [key, value] of Object.entries(data)) {
+                if (key !== 'kind') flat['data_' + key] = value;
+            }
+            flat.data_handle_x = data.handlePosX;
+            flat.data_handle_y = data.handlePosY;
+            flat.data_panel_x = data.panelPosX;
+            flat.data_panel_y = data.panelPosY;
+            if (data.handle0X !== undefined) {
+                flat.quad_offsets = [[data.handle0X, data.handle0Y], [data.handle1X, data.handle1Y], [data.handle2X, data.handle2Y]];
+            }
+            if (object.unrecognizedAttributes && object.unrecognizedAttributes.length) {
+                flat.data_unrecognizedAttributes = object.unrecognizedAttributes;
+            }
+            return flat;
+        }
+
+        function normalizeEntry(source) {
+            const objects = (source.objects || []).map(normalizeObject);
+            const resolved = Array.isArray(source.timelines) || (source.objects || []).some(object => object.data);
+            return { ...source, objects, timelineResolved: resolved };
+        }
+
         function objectItem(record) {
             return { key: record.object_type, type: label(record.object_type), title: label(record.object_type) + ' #' + record.object_index, category: 'object', record };
         }
@@ -508,7 +549,10 @@
             let py = object.data_panel_y;
             let quad = null;
 
-            if (object.object_type === 'LIGHT_BEAM' && object.data_raw) {
+            if (object.quad_offsets) {
+                const corners = object.quad_offsets.map(offset => world(x + offset[0], y + offset[1]));
+                quad = [point, ...corners];
+            } else if (object.object_type === 'LIGHT_BEAM' && object.data_raw) {
                 quad = lightBeamQuad(object, world, point);
                 if (quad) {
                     const raw = object.data_raw.split('~').map(Number);
@@ -1364,12 +1408,12 @@
                 const name = selected.feature.properties.name.toUpperCase();
                 const variants = await loadRoomVariants(regionName.toUpperCase(), name, current);
                 if (current !== version) return;
-                entry = variants && variants[''];
+                entry = variants && pickVariant(variants, context);
                 if (!entry) {
                     showInspector('No default room data in the supplied database.');
                     return;
                 }
-                entry = filterEntry(entry, context);
+                entry = filterEntry(normalizeEntry(entry), context);
                 showInspector();
                 whenMapIdle(function () {
                     if (current === version) drawObjects();
@@ -1418,5 +1462,48 @@
         return { select, drawObjects, loadJSON };
     }
 
-    window.RoomEffectsCommon = { createRoomEffects };
+    function setupCollapsiblePanel(selector, side, labelText) {
+        const panel = document.querySelector(selector);
+        if (!panel || panel.dataset.effectsCollapsible) return;
+        panel.dataset.effectsCollapsible = '1';
+        panel.classList.add('effects-collapsible-panel', 'effects-panel-side-' + side);
+
+        const content = document.createElement('div');
+        content.className = 'effects-panel-content';
+        while (panel.firstChild) content.appendChild(panel.firstChild);
+        panel.appendChild(content);
+
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'effects-collapse-tab';
+        tab.setAttribute('aria-label', 'Toggle ' + labelText + ' panel');
+        tab.setAttribute('aria-expanded', 'true');
+        tab.title = 'Collapse / expand ' + labelText;
+        for (let i = 0; i < 3; i++) tab.appendChild(document.createElement('span'));
+        tab.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const collapsed = panel.classList.toggle('effects-panel-collapsed');
+            tab.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        });
+        panel.insertBefore(tab, content);
+
+        const label = document.createElement('div');
+        label.className = 'effects-collapsed-label';
+        label.textContent = labelText;
+        label.setAttribute('aria-hidden', 'true');
+        panel.appendChild(label);
+    }
+
+    function setupCollapsibleSidePanels() {
+        setupCollapsiblePanel('.side-panel.left-panel', 'left', 'Regions');
+        setupCollapsiblePanel('.side-panel.right-panel', 'right', 'Slugcat / Layers');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupCollapsibleSidePanels);
+    } else {
+        setupCollapsibleSidePanels();
+    }
+
+    window.RoomEffectsCommon = { createRoomEffects, setupCollapsibleSidePanels };
 })();

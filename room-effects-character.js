@@ -14,6 +14,34 @@
         'LOCAL_TERRAIN', 'TERRAIN_HANDLE',
     ]);
 
+    function timelineSuffix(value) {
+        const key = characterKey(value);
+        if (!key) return '';
+        return key === 'inv' ? 'Inv' : key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    function pickVariant(variants, slugcat) {
+        if (!variants) return null;
+        if (!slugcat) {
+            return variants[''] || Object.values(variants)[0];
+        }
+        const suffix = timelineSuffix(slugcat);
+        const suffixLower = suffix.toLowerCase();
+
+        for (const key of Object.keys(variants)) {
+            if (key.toLowerCase() === suffixLower) {
+                return variants[key];
+            }
+        }
+        const shared = Object.values(variants).find(variant =>
+            variant && Array.isArray(variant.timelines) &&
+            variant.timelines.some(t => String(t).toLowerCase() === suffixLower)
+        );
+        if (shared) return shared;
+
+        return variants[''] || Object.values(variants)[0];
+    }
+
     function characterKey(value) {
         const name = String(value).trim().toLowerCase();
         return aliases[name] || name;
@@ -48,6 +76,10 @@
             return entry;
         }
         const character = characterKey(slugcat);
+        if (entry.timelineResolved) {
+            const resolvedTriggers = (entry.triggers || []).filter(trigger => allows(trigger.slugcats, character));
+            return { ...entry, triggers: resolvedTriggers };
+        }
         const excludedZones = entry.objects.filter(object =>
             object.object_type === 'FILTER' && !allows(objectAvailability(object), character)
         );
@@ -62,7 +94,7 @@
         return { ...entry, objects, triggers };
     }
 
-    const api = { forCharacter };
+    const api = { forCharacter, pickVariant, timelineSuffix };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {
