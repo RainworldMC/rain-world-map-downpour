@@ -318,7 +318,13 @@ button.rw-ui.effects-hide-toggle[hidden] {
 }
 
 .effects-type-panel[hidden] {
-    display: none;
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    visibility: hidden;
 }
 
 .effects-type-list > button.rw-ui.effects-type-toggle:last-child {
@@ -716,9 +722,9 @@ button.effects-collapse-tab > span {
 }
 
 .effects-panel-side-left.effects-panel-collapsed {
-    transform: translateX(calc(-100% + 2px));
+    transform: translateX(calc(-100% - 4px));
 }
 
 .effects-panel-side-right.effects-panel-collapsed {
-    transform: translateX(calc(100% - 2px));
+    transform: translateX(calc(100% + 4px));
 }
