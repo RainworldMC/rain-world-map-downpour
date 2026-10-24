@@ -22,7 +22,18 @@
         const radiusClasses = new Set(['LightSourceData', 'ResizableObjectData', 'InsectGroupData', 'ScavengerOutpostData', 'SnowSourceData', 'OEsphereData', 'CellDistortionData', 'LocalBlizzardData', 'EnergySwirlData', 'SteamPipeData', 'FilterData', 'RippleLevelFilterData', 'PrinceFilterData', 'CollectTokenData', 'AirPocketData', 'WaterCutoffData', 'CustomRotData', 'GeyserData', 'GooDripsData', 'LobeTreeData', 'MudPitData', 'RainbowData', 'RainbowNoFadeData', 'ReliableIggyDirectionData', 'KarmaFlowerPatchData', 'WaterCurrentData']);
         const hiddenEffectKeys = new Set(['inherited', 'overwrite', 'effectindex', 'amount']);
         const hiddenSettingKeys = new Set(['mergedtimelines']);
+        const roomSettingGroups = [
+            { title: 'General', names: ['Parent Template', 'Connections'] },
+            { title: 'Rain', names: ['Danger Type', 'Rain Intensity', 'Rumble Intensity', 'Ceiling Drips'] },
+            { title: 'Waves', names: ['Wave Speed', 'Wave Amplitude', 'Wave Length', 'Second Wave Amplitude', 'Second Wave Length', 'Water Reflection Alpha'] },
+            { title: 'Ambience', names: ['Clouds', 'Grime', 'Bkg Drone Volume', 'Bkg Drone No Threat Volume'] },
+            { title: 'Items', names: ['Random Item Density', 'Random Item Spear Chance'] },
+            { title: 'Palette', names: ['Palette', 'Fade Palette Index', 'Fade Palette Values', 'Effect Color A', 'Effect Color B'] },
+            { title: 'Terrain', names: ['Terrain Light', 'Terrain Stain Amount', 'Terrain Stain Brightness', 'Terrain Stain Height', 'Terrain Waves', 'Terrain Edge Radius', 'Terrain Goo Height', 'Terrain Grain', 'Terrain Depth', 'Terrain Sky Fade', 'Terrain Palette'] },
+            { title: 'Misc', names: ['Room Specific Script', 'Wet Terrain'] },
+        ];
         const hiddenRecordKeys = new Set(['soundindex', 'inherited', 'overwrite', 'isblue', 'isgreen', 'iswhite', 'isred', 'isdev', 'availabletoplayers', 'vertices', 'raw',]);
+        const paletteSettingKeys = new Set(['palette', 'effectcolora', 'effectcolorb', 'terrainlight', 'terrainstainamount', 'terrainstainbrightness', 'terrainstainheight', 'terrainwaves', 'terrainedgeradius', 'terraingooheight', 'terraingrain', 'terraindepth', 'terrainskyfade', 'terrainpalette',]);
         const noKeys = new Set();
         const edgePadding = 6;
         const cardGap = 6;
@@ -296,6 +307,107 @@
                 if (hiddenKeys.has(normalizeKey(name))) continue;
                 if (hiddenKeys.has(normalizeKey(name.replace(/^data_/, '')))) continue;
                 appendRow(parent, name, value);
+            }
+        }
+
+        function appendGroupHeading(parent, title) {
+            const row = element('div', 'effect-setting effect-group-heading');
+            row.appendChild(element('span', '', title));
+            parent.appendChild(row);
+        }
+
+        function appendSubheading(parent, title) {
+            const row = element('div', 'effect-setting effect-subheading');
+            row.appendChild(element('span', '', title));
+            parent.appendChild(row);
+        }
+
+        function appendIndentedRow(parent, name, value, extraClass) {
+            const row = element('div', 'effect-setting effect-setting-indented' + (extraClass ? ' ' + extraClass : ''));
+            row.append(element('span', '', label(name)), element('span', '', formatRoomSettingValue(value)));
+            parent.appendChild(row);
+        }
+
+        function splitFadePaletteValues(value) {
+            if (Array.isArray(value)) return value.map(String);
+            if (value === null || value === undefined) return [];
+            return String(value).split(',').map(part => part.trim()).filter(Boolean);
+        }
+
+        function formatPercent(value) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return String(value);
+            return format(Math.round(number * 1000) / 10) + '%';
+        }
+
+        function formatRoomSettingValue(value) {
+            if (typeof value === 'number') {
+                if (Number.isFinite(value) && value > 0 && value < 1) {
+                    return formatPercent(value);
+                }
+                return format(value);
+            }
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (trimmed !== '' && /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(trimmed)) {
+                    const number = Number(trimmed);
+                    if (Number.isFinite(number) && number > 0 && number < 1) {
+                        return formatPercent(number);
+                    }
+                }
+            }
+            return format(value);
+        }
+
+        function appendFadePaletteValues(parent, value) {
+            const values = splitFadePaletteValues(value);
+            if (!values.length) return;
+            appendSubheading(parent, 'Fade Palette Values');
+            values.forEach((part, index) => {
+                appendIndentedRow(parent, 'Screen' + index, formatPercent(part), 'effect-subsetting');
+            });
+        }
+
+        function appendRoomSettings(parent, values) {
+            const normalized = {};
+            for (const [name, value] of Object.entries(values || {})) {
+                const key = normalizeKey(name);
+                if (hiddenSettingKeys.has(key)) continue;
+                if (isInternalOffsetKey(name)) continue;
+                normalized[key] = { name, value };
+            }
+
+            const used = new Set();
+
+            for (const group of roomSettingGroups) {
+                const entries = [];
+                for (const name of group.names) {
+                    const entry = normalized[normalizeKey(name)];
+                    if (!entry) continue;
+                    entries.push(entry);
+                    used.add(normalizeKey(entry.name));
+                }
+                if (!entries.length) continue;
+                appendGroupHeading(parent, group.title);
+                for (const entry of entries) {
+                    if (normalizeKey(entry.name) === 'fadepalettevalues') {
+                        appendFadePaletteValues(parent, entry.value);
+                    } else {
+                        appendIndentedRow(parent, entry.name, entry.value);
+                    }
+                }
+            }
+
+            const leftovers = [];
+            for (const [key, entry] of Object.entries(normalized)) {
+                if (used.has(key)) continue;
+                leftovers.push(entry);
+            }
+            if (leftovers.length) {
+                appendGroupHeading(parent, 'Other');
+                for (const entry of leftovers) {
+                    appendIndentedRow(parent, entry.name, entry.value);
+                }
             }
         }
 
@@ -1296,7 +1408,7 @@
                     body.appendChild(element('div', 'effects-room-details'));
                     updateVisibleDetails(visibleItems());
                     const settings = createDetails('Room settings', 'effects-room-settings');
-                    appendRows(settings.content, entry.settings, hiddenSettingKeys);
+                    appendRoomSettings(settings.content, entry.settings);
                     body.appendChild(settings);
                 }
             }

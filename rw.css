@@ -5,10 +5,40 @@
 }
 
 .rw-title {
-    font-family: "Rodondo";
-    font-size: 6rem;
-    text-align: center;
-    line-height: 75%;
+    display: flex;
+    justify-content: center;
+}
+
+.rw-title-image {
+    display: block;
+    width: 501px;
+    max-width: 100%;
+    aspect-ratio: 501 / 315;
+}
+
+.rw-title-fallback {
+    image-rendering: pixelated;
+}
+
+.rw-rain-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.rw-rain-dim {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: rgba(0, 0, 0, 0.45);
+    pointer-events: none;
 }
 
 .rw-bigtext {
@@ -300,3 +330,49 @@ input[type='checkbox'].rw-ui-ckb:active+label {
 }
 
 /* RW UI END */
+
+/* RAIN TOGGLE START */
+
+.rw-rain-toggle {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+}
+
+.rw-rain-toggle[hidden] {
+    display: none;
+}
+
+.rw-rain-toggle input[type='checkbox'].rw-ui {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+}
+
+.rw-rain-toggle input[type='checkbox'].rw-ui-ckb::before {
+    font-size: 1rem;
+    line-height: 20px;
+}
+
+.rw-rain-toggle input[type='checkbox'].rw-ui-ckb + label {
+    position: static;
+    left: auto;
+    top: auto;
+    color: #A9A4B2;
+    /* menu lightgray */
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s;
+}
+
+.rw-rain-toggle input[type='checkbox'].rw-ui-ckb:hover + label,
+.rw-rain-toggle input[type='checkbox'].rw-ui-ckb:checked + label {
+    color: white;
+}
+
+/* RAIN TOGGLE END */

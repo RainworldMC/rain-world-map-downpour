@@ -17,6 +17,96 @@
 
     <script src="./global.js"></script>
 
+    <script type="x-shader/x-vertex" id="rw-title-vs">
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+            v_uv = a_position * 0.5 + 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="rw-title-fs">
+        precision highp float;
+        uniform sampler2D u_main;
+        uniform sampler2D u_gradient;
+        uniform float u_gradientWidth;
+        uniform float u_spriteRed;
+        uniform float u_rain;
+        uniform vec4 u_rect;
+        uniform vec2 u_window;
+        varying vec2 v_uv;
+        void main() {
+            vec2 scr = vec2((u_rect.x + v_uv.x * u_rect.z) / u_window.x, (u_rect.y + v_uv.y * u_rect.w) / u_window.y);
+            vec4 tex = texture2D(u_main, v_uv);
+            float h = (scr.x * 0.7 - scr.y * 0.19 + u_rain * 0.7) * mix(0.75, 1.0, u_spriteRed) + tex.x * tex.x * tex.x * -0.0125;
+            float band = floor(h * 50.0);
+            float wrapped = band - 50.0 * floor(band / 50.0);
+            float texel = floor(wrapped * u_gradientWidth / 50.0 + 0.0001);
+            vec3 rgb = texture2D(u_gradient, vec2((texel + 0.5) / u_gradientWidth, 0.5)).xyz;
+            gl_FragColor = vec4(rgb * tex.w, tex.w);
+        }
+    </script>
+
+    <script type="x-shader/x-vertex" id="rw-rain-vs">
+        attribute vec2 a_position;
+        attribute vec2 a_uv;
+        attribute vec4 a_color;
+        attribute float a_mode;
+        uniform vec2 u_view;
+        varying vec2 v_uv;
+        varying vec4 v_color;
+        varying float v_mode;
+        void main() {
+            v_uv = a_uv;
+            v_color = a_color;
+            v_mode = a_mode;
+            gl_Position = vec4(a_position / u_view * 2.0 - 1.0, 0.0, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="rw-rain-fs">
+        precision highp float;
+        uniform sampler2D u_noise;
+        varying vec2 v_uv;
+        varying vec4 v_color;
+        varying float v_mode;
+        float centerDistance() {
+            return clamp(distance(v_uv, vec2(0.5)) * 2.0, 0.0, 1.0);
+        }
+        vec4 noisyLight() {
+            vec2 base = vec2(v_uv.x * 6.0, v_uv.y * 3.0);
+            vec2 delta = vec2(0.5) - v_uv;
+            vec2 away = length(delta) > 0.0001 ? normalize(delta) : vec2(0.0);
+            float h = 0.0;
+            for (int j = 0; j < 4; j++) {
+                h += texture2D(u_noise, base + away * 0.02 * float(j)).x;
+            }
+            h /= 5.0;
+            float d = 0.25 * pow(1.0 - v_color.w, 0.5);
+            float c = pow(pow(1.0 - pow(centerDistance(), 2.0), 3.5), 1.0 - d + 2.0 * d * h);
+            return vec4(v_color.xyz, c * v_color.w);
+        }
+        vec4 edgeFade() {
+            float w = v_color.w;
+            float c = 1.0 - pow(1.0 - pow(centerDistance(), mix(5.0, 0.5, w)), 2.0);
+            c = mix(c, 1.0, max(0.0, w * w - 0.5) * 2.0);
+            return vec4(v_color.xyz, c * pow(w, 0.25));
+        }
+        void main() {
+            if (v_mode < 0.5) {
+                gl_FragColor = v_color;
+            } else if (v_mode < 1.5) {
+                gl_FragColor = noisyLight();
+            } else {
+                gl_FragColor = edgeFade();
+            }
+        }
+    </script>
+
+    <script src="./rw-title.js"></script>
+    <script src="./rw-rain.js"></script>
+
     <style>
         /* big flex block of darkness */
         body,
@@ -33,6 +123,8 @@
         /* floaty in the center */
         #main-menu {
             margin: auto;
+            position: relative;
+            z-index: 2;
         }
 
         /* stuck to the bottom, custom link colors */
@@ -44,7 +136,8 @@
             font-weight: 500;
             color: #A9A4B2;
             /* menu lightgray */
-            background-color: black;
+            position: relative;
+            z-index: 2;
         }
 
         #main-menu-footer a:link {
@@ -139,8 +232,15 @@
 </head>
 
 <body>
-    <form id="main-menu">
-        <div class="rw-title">Rain World</div>
+        <canvas id="rw-rain-canvas" class="rw-rain-canvas" aria-hidden="true"></canvas>
+        <div class="rw-rain-dim" aria-hidden="true"></div>
+        </div>
+        <div id="rw-rain-toggle-group" class="rw-rain-toggle" hidden>
+            <input type="checkbox" id="rw-rain-toggle" class="rw-ui rw-ui-ckb" checked autocomplete="off">
+            <label for="rw-rain-toggle" class="rw-text">Enable Rain</label>
+        </div>
+        <form id="main-menu">
+        <div class="rw-title"><canvas id="rw-title-canvas" class="rw-title-image" role="img" aria-label="Rain World Downpour"></canvas></div>
         <div class="rw-bigtext" style="text-align: center; margin-top:0.5em;">I'm lost as...</div>
         <div id="scuglist-group">
             <div id="scuglist-vanilla"></div>
@@ -174,14 +274,15 @@
         </script>
 
     </form>
-    <div id="main-menu-footer">Code on <a href="https://github.com/RainworldMC/rain-world-map-downpour">GitHub</a> | Fork of <a
+    <div id="main-menu-footer">Code on <a
+            href="https://github.com/RainworldMC/rain-world-map-downpour">GitHub</a> | Modified by <a
+            href="https://github.com/Fouriiiis">fouriiiis</a> and <a
+            href="https://github.com/BrickCraftDream">BrickCraftDream</a> | Fork of <a
             href="https://github.com/rain-world-map/rain-world-map.github.io">this project</a> by <a
             href="https://github.com/rain-world-map/">Dual</a> | <a
             href="https://henpemaz.github.io/Rain-World-Interactive-Map/">Original</a> by <a
-            href="https://github.com/henpemaz/">Henpemaz</a> | Ported by <a
-            href="https://github.com/Dual-Iron/">Dual</a> | Favicon and embed by <a
-            href="https://twitter.com/liszhuk/">lis</a> | Updated, detailed map <a
-            href="https://noblecat57.github.io/">here</a> (doesn't include edits of the RWMC dev team) | <a
+            href="https://github.com/henpemaz/">Henpemaz</a> | Favicon and embed by <a
+            href="https://twitter.com/liszhuk/">lis</a> | <a
             href="https://store.steampowered.com/app/312520/Rain_World/">Rain World</a> is property of <a
             href="https://twitter.com/VideocultMedia">Videocult</a>
     </div>
